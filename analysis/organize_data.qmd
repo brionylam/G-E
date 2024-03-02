@@ -11,3 +11,74 @@ source(here("utils","functions.R"))
 ```
 
 This quarto doc is used to organize the data.
+
+```{r} 
+#| label: readdata
+
+
+library(haven)
+dts <- read_sav(here("data","data_raw",
+                      "osfstorage-archive","CCAM SPSS Data 2008-2022.sav"))
+
+ccam <- subset(dts, 
+              select=c("wave","gender","age_category","generation","race","educ_category","income_category","party_x_ideo",
+                       "fund_research","reg_CO2_pollutant","reg_utilities","discuss_GW",
+                    "harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
+
+ccam <- subset(ccam, wave != 13)
+```
+
+
+```{r} 
+#| label: missingdata
+
+# Assuming 'ccam' is your dataset
+# Replace 'ccam' with the actual name of your dataset
+
+# Specify the variables of interest
+variables_of_interest <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
+
+# Create a function to count "-1" and "0" for a specific variable
+count_missing_values <- function(variable_name) {
+  cat("Variable:", variable_name, "\n")
+  cat("Number of '-1':", sum(ccam[[variable_name]] == -1), "\n")
+  cat("Number of '0':", sum(ccam[[variable_name]] == 0), "\n")
+}
+
+# Apply the function to each variable of interest
+lapply(variables_of_interest, count_missing_values)
+
+
+```
+
+
+```{r} 
+#| label: missingvalues
+
+# in this dateset, "-1" menas reject to respond
+
+
+ccam$att <- rowSums(ccam[, c("reg_coal_emissions", "reg_CO2_pollutant", "reg_utilities",
+                             "fund_research", "harm_plants_animals", "harm_US")])
+```
+
+```{r} 
+#| label: merge
+
+ccam$att <- rowSums(ccam[, c("reg_coal_emissions", "reg_CO2_pollutant", "reg_utilities",
+                             "fund_research", "harm_plants_animals", "harm_US")])
+```
+
+
+
+```{r}
+#| label: save-data
+
+save(ccam, file=here("data","data_constructed","ccam_data.RData"))
+```
+
+
+
+
+
+
