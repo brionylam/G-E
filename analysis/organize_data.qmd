@@ -89,21 +89,20 @@ ccam <- subset(ccam, fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW 
 # Specify the variables for imputation
 variables_to_impute <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
 
-# Perform KNN imputation using VIM
-ccam_imputed <- kNN(ccam[, variables_to_impute], variable = variables_to_impute, k = 5)
-
-# Create indicator variables for imputed values
+# Mean imputation for variables with missing values coded as "0"
 for (variable in variables_to_impute) {
-  ccam[paste0("imputed_", variable)] <- ifelse(is.na(ccam_imputed[[variable]]), 1, 0)
-  # Optional: Create indicator variable for original missing values (coded as 0)
-  ccam[paste0("original_missing_", variable)] <- ifelse(ccam[[variable]] == 0, 1, 0)
+  if (is.numeric(ccam[[variable]])) {
+    # Replace "0" with NA
+    ccam[[variable]][ccam[[variable]] == 0] <- NA
+    
+    # Impute with mean for numerical variables
+    ccam[[variable]][is.na(ccam[[variable]])] <- mean(ccam[[variable]], na.rm = TRUE)
+  }
 }
-
-# Update the dataset with imputed values by replacing only the imputed columns
-ccam[ , variables_to_impute] <- ccam_imputed[, variables_to_impute]
 
 # Check the imputed dataset
 head(ccam)
+
 
 
 ```
@@ -111,8 +110,7 @@ head(ccam)
 ```{r}
 #| label: merge
 
-ccam$att <- rowSums(ccam[, c("reg_coal_emissions", "reg_CO2_pollutant", "reg_utilities",
-                             "fund_research", "harm_plants_animals", "harm_US")])
+ccam$att <- rowSums(ccam[, c("fund_research","reg_CO2_pollutant","discuss_GW","harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")])
 ```
 
 ```{r}
