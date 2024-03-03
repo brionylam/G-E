@@ -5,6 +5,12 @@ title: "Organize Data Notebook"
 ```{r}
 #| label: setup
 #| include: false
+
+install.packages("mice")
+install.packages("VIM")
+
+library(mice)
+library(VIM)
 library(here)
 source(here("utils","check_packages.R"))
 source(here("utils","functions.R"))
@@ -12,7 +18,7 @@ source(here("utils","functions.R"))
 
 This quarto doc is used to organize the data.
 
-```{r} 
+```{r}
 #| label: readdata
 
 
@@ -22,63 +28,95 @@ dts <- read_sav(here("data","data_raw",
 
 ccam <- subset(dts, 
               select=c("wave","gender","age_category","generation","race","educ_category","income_category","party_x_ideo",
-                       "fund_research","reg_CO2_pollutant","reg_utilities","discuss_GW",
+                       "fund_research","reg_CO2_pollutant","discuss_GW",
                     "harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
 
-ccam <- subset(ccam, wave != 13)
+#"reg_CO2_pollutant" not asked in wave4, "harm_plants_animals" not asked in wave13
+ccam <- subset(ccam, wave != 4 & wave != 13)
 ```
 
+```{r}
+#| label: first evaluation of missing value
 
-```{r} 
-#| label: missingdata
-
-# Assuming 'ccam' is your dataset
 # Replace 'ccam' with the actual name of your dataset
 
-# Specify the variables of interest
-variables_of_interest <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
+# Specify the first set of variables of interest
+first_set_variables <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
 
 # Create a function to count "-1" and "0" for a specific variable
-count_missing_values <- function(variable_name) {
+count_minus_one_and_zero_values <- function(variable_name) {
   cat("Variable:", variable_name, "\n")
   cat("Number of '-1':", sum(ccam[[variable_name]] == -1), "\n")
   cat("Number of '0':", sum(ccam[[variable_name]] == 0), "\n")
 }
 
-# Apply the function to each variable of interest
-lapply(variables_of_interest, count_missing_values)
+# Apply the function to each variable in the first set
+lapply(first_set_variables, count_minus_one_and_zero_values)
+
+# Specify the second set of variables of interest
+second_set_variables <- c("fund_research", "reg_CO2_pollutant", "discuss_GW")
+
+# Create a function to count "-1" for a specific variable
+count_minus_one_values <- function(variable_name) {
+  cat("Variable:", variable_name, "\n")
+  cat("Number of '-1':", sum(ccam[[variable_name]] == -1), "\n")
+}
+
+# Apply the function to each variable in the second set
+lapply(second_set_variables, count_minus_one_values)
 
 
 ```
 
+```{r}
+#| label: drop missing value
 
-```{r} 
-#| label: missingvalues
+# in this dateset, "-1" menas reject to respond, drop all the "-1"
 
-# in this dateset, "-1" menas reject to respond
+# "fund_research","reg_CO2_pollutant","discuss_GW",
+# "harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"
 
-
-ccam$att <- rowSums(ccam[, c("reg_coal_emissions", "reg_CO2_pollutant", "reg_utilities",
-                             "fund_research", "harm_plants_animals", "harm_US")])
+ccam <- subset(ccam, fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & 
+                 harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1 )
 ```
 
-```{r} 
+```{r}
+#| label:  impute missing values
+
+# in this dateset, "0" means don't know
+
+
+# Specify the variables for imputation
+variables_to_impute <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
+
+# Perform KNN imputation using VIM
+ccam_imputed <- kNN(ccam[, variables_to_impute], variable = variables_to_impute, k = 5)
+
+# Create indicator variables for imputed values
+for (variable in variables_to_impute) {
+  ccam[paste0("imputed_", variable)] <- ifelse(is.na(ccam_imputed[[variable]]), 1, 0)
+  # Optional: Create indicator variable for original missing values (coded as 0)
+  ccam[paste0("original_missing_", variable)] <- ifelse(ccam[[variable]] == 0, 1, 0)
+}
+
+# Update the dataset with imputed values by replacing only the imputed columns
+ccam[ , variables_to_impute] <- ccam_imputed[, variables_to_impute]
+
+# Check the imputed dataset
+head(ccam)
+
+
+```
+
+```{r}
 #| label: merge
 
 ccam$att <- rowSums(ccam[, c("reg_coal_emissions", "reg_CO2_pollutant", "reg_utilities",
                              "fund_research", "harm_plants_animals", "harm_US")])
 ```
 
-
-
 ```{r}
 #| label: save-data
 
 save(ccam, file=here("data","data_constructed","ccam_data.RData"))
 ```
-
-
-
-
-
-
