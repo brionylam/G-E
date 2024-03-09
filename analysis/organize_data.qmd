@@ -110,7 +110,50 @@ head(ccam)
 ```{r}
 #| label: merge
 
+# merge 6 variables into one variable called "att", which means the  pro-environment attitude. these 6 variables are all ordinal variables, and there are 5 ordinal level from 0 points to 4 point, the greater the number, the more the respondent pro-environment. 
 ccam$att <- rowSums(ccam[, c("fund_research","reg_CO2_pollutant","discuss_GW","harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")])
+
+
+# set male(=1) as the reference group
+ccam$gender <- as.factor(ccam$gender)
+ccam$gender <- relevel(ccam$gender, ref = "1")
+ccam$gender <- factor(ccam$gender, levels = c(1, 2), labels = c("male", "female"))
+
+
+ccam$age_category <- factor(case_when(
+  ccam$age_category==1 ~ "18-34",
+  ccam$age_category==2 ~ "35-54",
+  ccam$age_category==3 ~ "55+"),
+  levels=c("18-34","35-54","55+"))
+summary(ccam$age_category)
+
+ccam$educ_category <- factor(case_when(
+  ccam$educ_category==1 ~ "L",
+  ccam$educ_category==2 ~ "H",
+  ccam$educ_category==3 ~ "C",
+  ccam$educ_category==4 ~ "B"),
+  levels=c("L","H","C","B"))
+
+summary(ccam$educ_category)
+
+ccam$income_category <- factor(case_when(
+  ccam$income_category==1 ~ "Less than 50K",
+  ccam$income_category==2 ~ "50K-100K",
+  ccam$income_category==3 ~ "Greater than 100K"),
+  levels=c("Less than 50K","50K-100K","Greater than 100K"))
+
+ccam$race <- factor(case_when(
+  ccam$race==1 ~ "W",
+  ccam$race==2 ~ "B",
+  ccam$race==3 ~ "O",
+  ccam$race==4 ~ "H"),
+  levels=c("W","B","O","H"))
+summary(ccam$race)
+
+ccam$age <- ccam$age_category
+ccam$edu <- ccam$educ_category
+ccam$income <- ccam$income_category 
+
 ```
 
 ```{r}

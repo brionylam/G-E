@@ -8,6 +8,102 @@ title: "Research Analysis Notebook"
 library(here)
 source(here("utils","check_packages.R"))
 source(here("utils","functions.R"))
+load(here("data","data_constructed","ccam_data.RData"))
 ```
 
 This quarto doc is used to analyze the data.
+
+```{r}
+#| label: analysis
+# Load the necessary libraries
+library(ggplot2)
+library(dplyr)
+
+
+
+# summary the distribution of att by gender
+att_summary <- ccam %>%
+  group_by(gender) %>%
+  summarize(
+    mean = mean(att),
+    median = median(att),
+    sd = sd(att),
+    min = min(att),
+    max = max(att)
+  )
+
+
+att_summary
+
+# Create a density plot of att by gender
+ggplot(ccam, aes(x = att, fill = factor(gender))) +
+  geom_density(alpha = 0.5) +
+  theme_bw()
+
+
+
+```
+
+
+
+```{r}
+#| label: build model
+
+
+library(ggplot2)
+ggplot(ccam, aes(x=factor(gender), y=att))+
+  geom_violin(fill="seagreen")+
+  theme_bw()
+
+library(dplyr)
+
+
+## I kind of didn't understand what this graph is for?? Oh I got it. the x axis means the concern of the harm next generation, and we actually can see that the education didn't affect taht much. 1&4 looks pretty similar.
+ccam %>%
+  group_by(harm_future_gen, edu) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count)) %>%
+  ggplot(aes(x = harm_future_gen, y = prop, fill = edu)) +
+  geom_col() +
+  xlab("Harm Future Gen") +
+  ylab("Proportion") +
+  scale_x_continuous(breaks = seq(1, 4, by = 1)) +
+  scale_fill_discrete(name = "Education Category") +
+  theme_minimal()
+
+
+
+```
+
+
+```{r}
+#| label:  build multivariate regression model 
+#| result: asis
+
+
+model1 <- lm(att ~ gender + age + race + edu + income, data = ccam)
+model2<- lm(att ~ gender + age + race + edu + income + harm_future_gen, data = ccam)
+model3 <- lm(att ~ gender + age + race + edu + income+ harm_dev_countries, data = ccam)
+
+
+#standardize <- function(x) {
+#  return((x-mean(x))/sd(x))
+#}
+
+#model4 <- lm(standardize(att) ~ gender + age + race + educ_category + income_category, data = ccam)
+#model5<- lm(standardize(harm_future_gen) ~ gender + age + race + educ_category + income_category, data = ccam)
+#model6 <- lm(standardize(harm_dev_countries) ~ gender + age + race + educ_category + income_category, data = ccam)
+
+
+
+screenreg(list(model1, model2, model3),
+digits = 3,
+        caption.above=TRUE, 
+        include.rsquared=TRUE,
+        include.adjrs=FALSE,
+        include.nobs=TRUE,
+        include.rmse=FALSE)
+
+```
+
+
