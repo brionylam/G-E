@@ -84,6 +84,7 @@ ccam %>%
 model1 <- lm(att ~ gender + age + race + edu + income, data = ccam)
 model2<- lm(att ~ gender + age + race + edu + income + harm_future_gen, data = ccam)
 model3 <- lm(att ~ gender + age + race + edu + income+ harm_dev_countries, data = ccam)
+model4 <- lm(att ~ gender + age + race + edu + income+ harm_future_gen + harm_dev_countries, data = ccam)
 
 
 #standardize <- function(x) {
@@ -96,8 +97,8 @@ model3 <- lm(att ~ gender + age + race + edu + income+ harm_dev_countries, data 
 
 
 
-screenreg(list(model1, model2, model3),
-digits = 3,
+screenreg(list(model1, model2, model3, model4),
+digits = 4,
         caption.above=TRUE, 
         include.rsquared=TRUE,
         include.adjrs=FALSE,
