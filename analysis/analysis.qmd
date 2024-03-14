@@ -81,10 +81,10 @@ ccam %>%
 #| result: asis
 
 
-model1 <- lm(att ~ gender + age + race + edu +  income + party_x_ideo, data = ccam)
-model2<- lm(att ~ gender + age + race + edu + income + party_x_ideo + harm_future_gen, data = ccam)
-model3 <- lm(att ~ gender + age + race + edu + income+ party_x_ideo + harm_dev_countries, data = ccam)
-model4 <- lm(att ~ gender + age + race + edu + income+ party_x_ideo +harm_future_gen + harm_dev_countries, data = ccam)
+model1 <- lm(att ~ gender + age + race + edu +  income + ideo, data = ccam)
+model2<- lm(att ~ gender + age + race + edu + income + ideo + harm_future_gen, data = ccam)
+model3 <- lm(att ~ gender + age + race + edu + income+ ideo + harm_dev_countries, data = ccam)
+model4 <- lm(att ~ gender + age + race + edu + income+ ideo +harm_future_gen + harm_dev_countries, data = ccam)
 
 
 #standardize <- function(x) {

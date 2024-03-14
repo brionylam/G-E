@@ -94,8 +94,8 @@ ccam <- subset(ccam, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 
     
     # Impute with mean for numerical variables
     #ccam[[variable]][is.na(ccam[[variable]])] <- mean(ccam[[variable]], na.rm = TRUE)
-  }
-}
+#  }
+# }
 
 # Check the imputed dataset
 #head(ccam)
@@ -148,12 +148,15 @@ ccam$race <- factor(case_when(
 summary(ccam$race)
 
 ccam$party_x_ideo <- factor(case_when(
-  ccam$income_category==1 ~ "Liberal Democrat",
-  ccam$income_category==2 ~ "Moderate Democrat",
-  ccam$income_category==3 ~ "Independent",
-  ccam$income_category==4 ~ "Liberal Republican",
-  ccam$income_category==5 ~ "Conservative Republican"),
-  levels=c("Liberal Decmocrat","Moderate Democrat","Independent","Liberal Repbulican","Conservative Republican"))
+  ccam$party_x_ideo==-2 ~ "No Party",
+  ccam$party_x_ideo==-1 ~ "Refused",
+  ccam$party_x_ideo==1 ~ "Liberal Democrat",
+  ccam$party_x_ideo==2 ~ "Moderate Democrat",
+  ccam$party_x_ideo==3 ~ "Independent",
+  ccam$party_x_ideo==4 ~ "Liberal Republican",
+  ccam$party_x_ideo==5 ~ "Conservative Republican"),
+  levels=c("No Party","Refused","Liberal Democrat","Moderate Democrat","Independent","Liberal Republican","Conservative Republican"))
+summary(ccam$party_x_ideo)
 
 ccam$age <- ccam$age_category
 ccam$edu <- ccam$educ_category
