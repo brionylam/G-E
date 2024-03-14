@@ -6,9 +6,6 @@ title: "Organize Data Notebook"
 #| label: setup
 #| include: false
 
-install.packages("mice")
-install.packages("VIM")
-
 library(mice)
 library(VIM)
 library(here)
@@ -29,7 +26,7 @@ dts <- read_sav(here("data","data_raw",
 ccam <- subset(dts, 
               select=c("wave","gender","age_category","generation","race","educ_category","income_category","party_x_ideo",
                        "fund_research","reg_CO2_pollutant","discuss_GW",
-                    "harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
+                       "worry","harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
 
 #"reg_CO2_pollutant" not asked in wave4, "harm_plants_animals" not asked in wave13
 ccam <- subset(ccam, wave != 4 & wave != 13)
@@ -41,7 +38,7 @@ ccam <- subset(ccam, wave != 4 & wave != 13)
 # Replace 'ccam' with the actual name of your dataset
 
 # Specify the first set of variables of interest
-first_set_variables <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
+first_set_variables <- c("worry","harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
 
 # Create a function to count "-1" and "0" for a specific variable
 count_minus_one_and_zero_values <- function(variable_name) {
@@ -76,7 +73,7 @@ lapply(second_set_variables, count_minus_one_values)
 # "fund_research","reg_CO2_pollutant","discuss_GW",
 # "harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"
 
-ccam <- subset(ccam, fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & 
+ccam <- subset(ccam, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & 
                  harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1 )
 ```
 
@@ -110,8 +107,8 @@ head(ccam)
 ```{r}
 #| label: merge
 
-# merge 6 variables into one variable called "att", which means the  pro-environment attitude. these 6 variables are all ordinal variables, and there are 5 ordinal level from 0 points to 4 point, the greater the number, the more the respondent pro-environment. 
-ccam$att <- rowSums(ccam[, c("fund_research","reg_CO2_pollutant","discuss_GW","harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")])
+# merge 9 variables into one variable called "att", which means the  pro-environment attitude. these 6 variables are all ordinal variables, and there are 5 ordinal level from 0 points to 4 point, the greater the number, the more the respondent pro-environment. 
+ccam$att <- rowSums(ccam[, c("fund_research","reg_CO2_pollutant","discuss_GW","worry","harm_personally", "harm_plants_animals", "harm_US")])
 
 
 # set male(=1) as the reference group
