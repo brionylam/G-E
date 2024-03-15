@@ -84,21 +84,21 @@ ccam <- subset(ccam, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 
 
 
 # Specify the variables for imputation
-#variables_to_impute <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
+variables_to_impute <- c("harm_personally", "harm_plants_animals", "harm_future_gen", "harm_US", "harm_dev_countries")
 
 # Mean imputation for variables with missing values coded as "0"
-#for (variable in variables_to_impute) {
-# if (is.numeric(ccam[[variable]])) {
-#    # Replace "0" with NA
-#    ccam[[variable]][ccam[[variable]] == 0] <- NA
+for (variable in variables_to_impute) {
+ if (is.numeric(ccam[[variable]])) {
+    # Replace "0" with NA
+    ccam[[variable]][ccam[[variable]] == 0] <- NA
     
     # Impute with mean for numerical variables
-    #ccam[[variable]][is.na(ccam[[variable]])] <- mean(ccam[[variable]], na.rm = TRUE)
-#  }
-# }
+    ccam[[variable]][is.na(ccam[[variable]])] <- mean(ccam[[variable]], na.rm = TRUE)
+  }
+ }
 
 # Check the imputed dataset
-#head(ccam)
+head(ccam)
 
 
 
