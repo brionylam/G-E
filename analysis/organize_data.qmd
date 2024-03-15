@@ -16,6 +16,8 @@ library(mice)
 library(VIM)
 library(stats)
 library(FactoMineR)
+library(ggplot2)
+
 ```
 
 This quarto doc is used to organize the data.
@@ -95,8 +97,6 @@ lapply(second_set_variables, count_minus_one_values)
 
 # in this dateset, "-1" menas reject to respond, drop all the "-1"
 
-# "fund_research","reg_CO2_pollutant","discuss_GW",
-# "harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"
 
 ccam <- subset(ccam, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & 
                  harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1 )
@@ -203,13 +203,14 @@ print(vif_result)
 ```
 
 ```{r}
-#| label: PCA
-# Load necessary packages
+#| label: PCA1
 
+
+
+# Select the variables for PCA
 variables_for_pca <- c("fund_research", "reg_CO2_pollutant", "discuss_GW", 
                        "worry", "harm_personally", "harm_plants_animals", 
                        "harm_US", "harm_future_gen", "harm_dev_countries")
-
 
 # Subset the dataset with the selected variables
 ccam_subset <- ccam[, variables_for_pca]
@@ -223,12 +224,125 @@ pca_result <- PCA(scaled_data, graph = FALSE)
 # Summary of PCA
 summary(pca_result)
 
-# Plot variance explained by each principal component
-plot(pca_result, choix = "var")
+# Get principal component loadings
+loadings <- pca_result$var$coord[, 1:2]
+
+# Get explained variances for Dim1 and Dim2
+explained_variances <- pca_result$eig[1:2, "eigenvalue"]
+explained_variance_perc <- explained_variances / sum(explained_variances)
+
+# Ensure that the length of explained_variance_perc matches the number of variables
+num_variables <- nrow(pca_result$var$coord)
+explained_variance_perc <- rep(explained_variance_perc, num_variables)
+
+# Create a data frame for biplot data
+biplot_data <- data.frame(
+  Dim.1 = loadings[, 1],
+  Dim.2 = loadings[, 2],
+  explained_variance_perc
+)
+
+
+# Plot biplot using ggplot2
+biplot <- ggplot(biplot_data, aes(x = Dim.1, y = Dim.2)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray") +
+  geom_text(aes(label = rownames(biplot_data)), size = 3, hjust = 0, vjust = 0) +
+  geom_segment(aes(x = 0, y = 0, xend = Dim.1, yend = Dim.2), 
+               arrow = arrow(length = unit(0.15, "inches")), color = "blue") +
+  labs(x = paste("Dim.1 (", round(explained_variance_perc[1] * 100, 2), "%)"),
+       y = paste("Dim.2 (", round(explained_variance_perc[2] * 100, 2), "%)")) +
+  theme_minimal()
+
+# Print the biplot
+print(biplot)
 
 
 ```
 
+```{r}
+#| label: PCA2
+
+
+install.packages("MASS")
+install.packages("factoextra")
+
+#Load Libraries 
+library(MASS) 
+library(factoextra)
+library(ggplot2)
+
+
+#Import data 
+dv <- subset(dts, 
+              select=c("fund_research","reg_CO2_pollutant","discuss_GW", "worry","harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
+
+#"reg_CO2_pollutant" not asked in wave4, "harm_plants_animals" not asked in wave13
+dv <- subset(dv, wave != 4 & wave != 13)
+
+# in this dateset, "-1" menas reject to respond, drop all the "-1"
+
+
+dv <- subset(dv, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1 )
+
+#Structure of Data 
+str(ccam$dv)
+summary(ccam$dv)
+
+
+
+
+# Run PCA
+dv_pca <- prcomp(dv, 
+                     scale = TRUE)
+
+#Summary of Analysis 
+summary(dv_pca)
+
+
+#Elements of PCA object 
+names(dv_pca)
+
+#Std Dev of Components 
+dv_pca$sdev
+
+#Eigenvectors 
+dv_pca$rotation
+
+#Std Dev and Mean of Variables 
+dv_pca$center
+dv_pca$scale
+
+#Principal Component Scores
+dv_pca$x
+
+
+#Scree Plot of Variance 
+fviz_eig(dv_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 70))
+
+#Biplot with Default Settings
+fviz_pca_biplot(dv_pca)
+
+#Biplot with Labeled Variables
+fviz_pca_biplot(dv_pca,
+                label="var")
+
+#Biplot with Colored Groups
+fviz_pca_biplot(dv_pca,
+                label="var",
+                habillage = dv_nomiss$class)
+
+#Biplot with Customized Colored Groups and Variables
+fviz_pca_biplot(dv_pca,
+                label="var",
+                habillage = dv_nomiss$class, 
+                col.var = "black") +
+                scale_color_manual(values=c("orange", "purple"))
+
+
+```
 
 ```{r}
 #| label: save-data
