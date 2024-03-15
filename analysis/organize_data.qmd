@@ -6,11 +6,16 @@ title: "Organize Data Notebook"
 #| label: setup
 #| include: false
 
+
+source(here("utils","check_packages.R"))
+source(here("utils","functions.R"))
+
+library(car)
 library(mice)
 library(VIM)
 library(here)
-source(here("utils","check_packages.R"))
-source(here("utils","functions.R"))
+library(stats)
+library(FactoMineR)
 ```
 
 This quarto doc is used to organize the data.
@@ -31,6 +36,26 @@ ccam <- subset(dts,
 #"reg_CO2_pollutant" not asked in wave4, "harm_plants_animals" not asked in wave13
 ccam <- subset(ccam, wave != 4 & wave != 13)
 ```
+
+
+```{r}
+#| label: intercorrelation
+
+
+# Select the variables of interest
+variables_of_interest <- c("gender","fund_research", "reg_CO2_pollutant", "discuss_GW", "worry", 
+                           "harm_personally", "harm_plants_animals", "harm_future_gen", 
+                           "harm_US", "harm_dev_countries")
+
+# Calculate the correlation matrix
+correlation_matrix <- cor(ccam[, variables_of_interest])
+
+# Print correlation matrix
+print(correlation_matrix)
+```
+
+
+
 
 ```{r}
 #| label: first evaluation of missing value
@@ -163,6 +188,50 @@ ccam$edu <- ccam$educ_category
 ccam$income <- ccam$income_category 
 ccam$ideo <-ccam$party_x_ideo
 ```
+
+```{r}
+#| label: multicollinearity
+
+# Fit your regression model
+model <- lm(att ~ gender + harm_future_gen + harm_dev_countries, data = ccam)
+
+# Calculate VIF
+vif_result <- vif(model)
+
+# Print VIF results
+print(vif_result)
+```
+
+```{r}
+#| label: PCA
+# Load necessary packages
+
+
+
+# Assuming you've already loaded your dataset "ccam"
+
+# Select the variables for PCA
+variables_for_pca <- c("fund_research", "reg_CO2_pollutant", "discuss_GW", 
+                       "worry", "harm_personally", "harm_plants_animals", 
+                       "harm_US")
+
+# Subset the dataset with the selected variables
+ccam_subset <- ccam[, variables_for_pca]
+
+# Standardize the data
+scaled_data <- scale(ccam_subset)
+
+# Perform PCA
+pca_result <- PCA(scaled_data, graph = FALSE)
+
+# Summary of PCA
+summary(pca_result)
+
+# Plot variance explained by each principal component
+plot(pca_result, choix = "var")
+
+```
+
 
 ```{r}
 #| label: save-data
