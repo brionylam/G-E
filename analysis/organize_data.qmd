@@ -5,6 +5,7 @@ title: "Organize Data Notebook"
 ```{r}
 #| label: setup
 #| include: false
+library(here)
 
 
 source(here("utils","check_packages.R"))
@@ -13,7 +14,6 @@ source(here("utils","functions.R"))
 library(car)
 library(mice)
 library(VIM)
-library(here)
 library(stats)
 library(FactoMineR)
 ```
@@ -206,14 +206,10 @@ print(vif_result)
 #| label: PCA
 # Load necessary packages
 
-
-
-# Assuming you've already loaded your dataset "ccam"
-
-# Select the variables for PCA
 variables_for_pca <- c("fund_research", "reg_CO2_pollutant", "discuss_GW", 
                        "worry", "harm_personally", "harm_plants_animals", 
-                       "harm_US")
+                       "harm_US", "harm_future_gen", "harm_dev_countries")
+
 
 # Subset the dataset with the selected variables
 ccam_subset <- ccam[, variables_for_pca]
@@ -229,6 +225,7 @@ summary(pca_result)
 
 # Plot variance explained by each principal component
 plot(pca_result, choix = "var")
+
 
 ```
 
