@@ -6,7 +6,8 @@ title: "Organize Data Notebook"
 #| label: setup
 #| include: false
 library(here)
-
+install.packages("MASS")
+install.packages("factoextra")
 
 source(here("utils","check_packages.R"))
 source(here("utils","functions.R"))
@@ -31,7 +32,7 @@ dts <- read_sav(here("data","data_raw",
                       "osfstorage-archive","CCAM SPSS Data 2008-2022.sav"))
 
 ccam <- subset(dts, 
-              select=c("wave","gender","age_category","generation","race","educ_category","income_category","party_x_ideo","party_x_ideo","weight_aggregate",
+              select=c("wave","gender","age_category","generation","race","educ_category","income_category","party_x_ideo","weight_aggregate",
                        "fund_research","reg_CO2_pollutant","discuss_GW",
                        "worry","harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
 
@@ -40,21 +41,7 @@ ccam <- subset(ccam, wave != 4 & wave != 13)
 ```
 
 
-```{r}
-#| label: intercorrelation
 
-
-# Select the variables of interest
-variables_of_interest <- c("gender","fund_research", "reg_CO2_pollutant", "discuss_GW", "worry", 
-                           "harm_personally", "harm_plants_animals", "harm_future_gen", 
-                           "harm_US", "harm_dev_countries")
-
-# Calculate the correlation matrix
-correlation_matrix <- cor(ccam[, variables_of_interest])
-
-# Print correlation matrix
-print(correlation_matrix)
-```
 
 
 
@@ -93,13 +80,21 @@ lapply(second_set_variables, count_minus_one_values)
 ```
 
 ```{r}
-#| label: drop missing value
+#| label: drop missing value_1
 
-# in this dateset, "-1" menas reject to respond, drop all the "-1"
+# in this dateset, "-1" menas reject to respond, drop all the "-1"; 
 
 
 ccam <- subset(ccam, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & 
-                 harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1 )
+                 harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1)
+```
+
+```{r}
+#| label: drop missing value_2
+
+
+#"0" means don't know
+ccam <- subset(ccam, harm_personally != 0 & harm_plants_animals != 0 & harm_future_gen != 0 & harm_US != 0 & harm_dev_countries != 0) 
 ```
 
 ```{r}
@@ -125,15 +120,89 @@ for (variable in variables_to_impute) {
 # Check the imputed dataset
 head(ccam)
 
+```
 
+```{r}
+#| label: intercorrelation
+
+
+# Select the variables of interest
+variables_of_interest <-subset(ccam,
+              select=c("fund_research","reg_CO2_pollutant","discuss_GW",
+                       "worry","harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
+
+# calculate the correlation matrix
+correlation_matrix <- cor(variables_of_interest)
+
+# Print the correlation matrix
+print(correlation_matrix)
+
+```
+
+```{r}
+#| label: PCA2
+
+
+#Load Libraries 
+library(MASS) 
+library(factoextra)
+library(ggplot2)
+
+#Structure of Data 
+str(variables_of_interest)
+summary(variables_of_interest)
+
+# Run PCA
+voi_pca <- prcomp(variables_of_interest, 
+                     scale = TRUE)
+
+#Summary of Analysis 
+summary(voi_pca)
+
+
+#Elements of PCA object 
+names(voi_pca)
+
+#Std Dev of Components 
+voi_pca$sdev
+
+#Eigenvectors 
+voi_pca$rotation
+
+#Std Dev and Mean of Variables 
+voi_pca$center
+voi_pca$scale
+
+#Principal Component Scores
+voi_pca$x
+
+
+#Scree Plot of Variance 
+fviz_eig(voi_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 70))
+
+#Biplot with Default Settings
+fviz_pca_biplot(voi_pca)
+
+#Biplot with Labeled Variables
+fviz_pca_biplot(voi_pca,
+                label="var")
+
+# Access the loadings for the first few principal components (PC1 to PC9)
+loadings <- voi_pca$rotation[, 1:9]
+
+# Display the loadings
+print(loadings)
 
 ```
 
 ```{r}
 #| label: merge
 
-# merge 7 variables into one variable called "att", which means the  pro-environment attitude. these 6 variables are all ordinal variables, and there are 5 ordinal level from 1 points to 4 point, the greater the number, the more the respondent pro-environment. 
-ccam$att <- rowSums(ccam[, c("fund_research","reg_CO2_pollutant","discuss_GW","worry","harm_personally", "harm_plants_animals", "harm_US")])
+# merge 9 variables into one variable called "att", which means the  pro-environment attitude. these 9 variables are all ordinal variables, and there are 5 ordinal level from 1 points to 4 point, the greater the number, the more the respondent pro-environment. 
+ccam$att <- rowSums(ccam[, c("fund_research","reg_CO2_pollutant","discuss_GW",
+                       "worry","harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries")])
 
 
 # set male(=1) as the reference group
@@ -190,6 +259,21 @@ ccam$ideo <-ccam$party_x_ideo
 ```
 
 ```{r}
+#| label: preliminary model
+
+
+model1 <- lm(att ~ gender + age + race + edu +  income + ideo, data = ccam)
+screenreg(list(model1),
+digits = 1,
+        caption.above=TRUE, 
+        include.rsquared=TRUE,
+        include.adjrs=FALSE,
+        include.nobs=TRUE,
+        include.rmse=FALSE)
+
+```
+
+```{r}
 #| label: multicollinearity
 
 # Fit your regression model
@@ -202,147 +286,8 @@ vif_result <- vif(model)
 print(vif_result)
 ```
 
-```{r}
-#| label: PCA1
 
 
-
-# Select the variables for PCA
-variables_for_pca <- c("fund_research", "reg_CO2_pollutant", "discuss_GW", 
-                       "worry", "harm_personally", "harm_plants_animals", 
-                       "harm_US", "harm_future_gen", "harm_dev_countries")
-
-# Subset the dataset with the selected variables
-ccam_subset <- ccam[, variables_for_pca]
-
-# Standardize the data
-scaled_data <- scale(ccam_subset)
-
-# Perform PCA
-pca_result <- PCA(scaled_data, graph = FALSE)
-
-# Summary of PCA
-summary(pca_result)
-
-# Get principal component loadings
-loadings <- pca_result$var$coord[, 1:2]
-
-# Get explained variances for Dim1 and Dim2
-explained_variances <- pca_result$eig[1:2, "eigenvalue"]
-explained_variance_perc <- explained_variances / sum(explained_variances)
-
-# Ensure that the length of explained_variance_perc matches the number of variables
-num_variables <- nrow(pca_result$var$coord)
-explained_variance_perc <- rep(explained_variance_perc, num_variables)
-
-# Create a data frame for biplot data
-biplot_data <- data.frame(
-  Dim.1 = loadings[, 1],
-  Dim.2 = loadings[, 2],
-  explained_variance_perc
-)
-
-
-# Plot biplot using ggplot2
-biplot <- ggplot(biplot_data, aes(x = Dim.1, y = Dim.2)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray") +
-  geom_text(aes(label = rownames(biplot_data)), size = 3, hjust = 0, vjust = 0) +
-  geom_segment(aes(x = 0, y = 0, xend = Dim.1, yend = Dim.2), 
-               arrow = arrow(length = unit(0.15, "inches")), color = "blue") +
-  labs(x = paste("Dim.1 (", round(explained_variance_perc[1] * 100, 2), "%)"),
-       y = paste("Dim.2 (", round(explained_variance_perc[2] * 100, 2), "%)")) +
-  theme_minimal()
-
-# Print the biplot
-print(biplot)
-
-
-```
-
-```{r}
-#| label: PCA2
-
-
-install.packages("MASS")
-install.packages("factoextra")
-
-#Load Libraries 
-library(MASS) 
-library(factoextra)
-library(ggplot2)
-
-
-#Import data 
-dv <- subset(dts, 
-              select=c("fund_research","reg_CO2_pollutant","discuss_GW", "worry","harm_personally","harm_plants_animals","harm_future_gen","harm_US","harm_dev_countries"))
-
-#"reg_CO2_pollutant" not asked in wave4, "harm_plants_animals" not asked in wave13
-dv <- subset(dv, wave != 4 & wave != 13)
-
-# in this dateset, "-1" menas reject to respond, drop all the "-1"
-
-
-dv <- subset(dv, worry !=-1 & fund_research != -1 & reg_CO2_pollutant != -1 & discuss_GW != -1 & harm_personally != -1 & harm_plants_animals != -1 & harm_future_gen != -1 & harm_US != -1 & harm_dev_countries != -1 )
-
-#Structure of Data 
-str(ccam$dv)
-summary(ccam$dv)
-
-
-
-
-# Run PCA
-dv_pca <- prcomp(dv, 
-                     scale = TRUE)
-
-#Summary of Analysis 
-summary(dv_pca)
-
-
-#Elements of PCA object 
-names(dv_pca)
-
-#Std Dev of Components 
-dv_pca$sdev
-
-#Eigenvectors 
-dv_pca$rotation
-
-#Std Dev and Mean of Variables 
-dv_pca$center
-dv_pca$scale
-
-#Principal Component Scores
-dv_pca$x
-
-
-#Scree Plot of Variance 
-fviz_eig(dv_pca, 
-         addlabels = TRUE,
-         ylim = c(0, 70))
-
-#Biplot with Default Settings
-fviz_pca_biplot(dv_pca)
-
-#Biplot with Labeled Variables
-fviz_pca_biplot(dv_pca,
-                label="var")
-
-#Biplot with Colored Groups
-fviz_pca_biplot(dv_pca,
-                label="var",
-                habillage = dv_nomiss$class)
-
-#Biplot with Customized Colored Groups and Variables
-fviz_pca_biplot(dv_pca,
-                label="var",
-                habillage = dv_nomiss$class, 
-                col.var = "black") +
-                scale_color_manual(values=c("orange", "purple"))
-
-
-```
 
 ```{r}
 #| label: save-data
