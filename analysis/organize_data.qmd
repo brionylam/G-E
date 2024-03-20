@@ -171,6 +171,7 @@ plot(1:length(eigenvalues), eigenvalues, type = "b", xlab = "Factor", ylab = "Ei
 # Add labels
 text(1:length(eigenvalues), eigenvalues, labels = round(eigenvalues, 2), pos = 3)
 
+#"harm_future_gen," "harm_US," and "harm_dev_countries" appear to be *key variables*, as they have high loadings on one or more factors, high communalities, and low uniquenesses.
 
 
 ```
