@@ -77,7 +77,7 @@ ccam %>%
 
 
 ```{r}
-#| label:  build multivariate regression model 
+#| label:  build multivariate regression model with att
 #| result: asis
 
 
@@ -108,3 +108,38 @@ digits = 4,
 ```
 
 
+
+```{r}
+#| label:  build multivariate regression model with att
+#| result: asis
+
+
+model1 <- lm(fund_research ~ gender + age + race + edu +  income + ideo, data = ccam)
+model2<- lm(reg_CO2_pollutant ~ gender + age + race + edu + income + ideo, data = ccam)
+model3 <- lm(discuss_GW ~ gender + age + race + edu + income+ ideo , data = ccam)
+model4 <- lm(worry ~ gender + age + race + edu + income+ ideo  , data = ccam)
+model5 <- lm(harm_personally ~ gender + age + race + edu + income+ ideo , data = ccam)
+model6 <- lm(harm_plants_animals ~ gender + age + race + edu + income+ ideo, data = ccam)
+model7 <- lm(harm_future_gen ~ gender + age + race + edu + income+ ideo , data = ccam)
+model8 <- lm(harm_US ~ gender + age + race + edu + income+ ideo, data = ccam)
+model9 <- lm(harm_dev_countries ~ gender + age + race + edu + income+ ideo , data = ccam)
+
+
+#standardize <- function(x) {
+#  return((x-mean(x))/sd(x))
+#}
+
+#model4 <- lm(standardize(att) ~ gender + age + race + educ_category + income_category, data = ccam)
+#model5<- lm(standardize(harm_future_gen) ~ gender + age + race + educ_category + income_category, data = ccam)
+#model6 <- lm(standardize(harm_dev_countries) ~ gender + age + race + educ_category + income_category, data = ccam)
+
+
+
+screenreg(list(model1, model2, model3, model4, model5,model6,model7,model8,model9),
+digits = 3,
+        caption.above=TRUE, 
+        include.rsquared=TRUE,
+        include.adjrs=FALSE,
+        include.nobs=TRUE,
+        include.rmse=FALSE)
+```
