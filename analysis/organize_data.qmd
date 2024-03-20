@@ -8,17 +8,22 @@ title: "Organize Data Notebook"
 library(here)
 install.packages("MASS")
 install.packages("factoextra")
+install.packages("ltm")
+install.packages("psych")
+
 
 source(here("utils","check_packages.R"))
 source(here("utils","functions.R"))
 
+library(psych)
+library(factoextra)
 library(car)
 library(mice)
 library(VIM)
 library(stats)
 library(FactoMineR)
 library(ggplot2)
-
+library(ltm)
 ```
 
 This quarto doc is used to organize the data.
@@ -98,7 +103,7 @@ ccam <- subset(ccam, harm_personally != 0 & harm_plants_animals != 0 & harm_futu
 ```
 
 ```{r}
-#| label:  impute missing values
+#| label:  impute original missing values
 
 # in this dateset, "0" means don't know
 
@@ -136,6 +141,44 @@ correlation_matrix <- cor(variables_of_interest)
 
 # Print the correlation matrix
 print(correlation_matrix)
+
+# Calculate Cronbach's Alpha
+alpha_result <- cronbach.alpha(variables_of_interest)
+
+# Print the result
+cat("Cronbach's alpha for the 'data' dataset:\n")
+cat("Items:", ncol(variables_of_interest), "Sample units:", nrow(variables_of_interest), "alpha:", alpha_result$alpha, "\n")
+
+# Optionally, calculate Cronbach's Alpha with a 95% confidence interval
+alpha_ci_result <- cronbach.alpha(variables_of_interest, CI = TRUE)
+cat("Bootstrap 95% CI based on 1000 samples\n")
+cat("2.5%:", alpha_ci_result$ci[1], "97.5%:", alpha_ci_result$ci[2], "\n")
+
+```
+```{r}
+#| label: factor analysis
+
+# Load necessary packages
+
+
+# Assuming your dataset is named 'variables_of_interest'
+# Perform Factor Analysis
+factor_analysis <- fa(variables_of_interest, nfactors = 3, rotate = "varimax")
+
+# Print Factor Analysis Results
+print(factor_analysis)
+
+# Visualize Scree Plot
+scree(factor_analysis)
+
+# Visualize Eigenvalues
+fviz_eig(factor_analysis)
+
+# Visualize Factor Loadings
+fviz_pca_var(factor_analysis, col.var = "contrib", gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE)
+
+
+
 
 ```
 
