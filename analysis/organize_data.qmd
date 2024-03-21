@@ -10,6 +10,7 @@ install.packages("MASS")
 install.packages("factoextra")
 install.packages("ltm")
 install.packages("psych")
+install.packages("dplyr")
 
 
 source(here("utils","check_packages.R"))
@@ -244,10 +245,9 @@ print(loadings)
 
 
 # set male(=1) as the reference group
-ccam$gender <- as.factor(ccam$gender)
-ccam$gender <- relevel(ccam$gender, ref = "1")
-ccam$gender <- factor(ccam$gender, levels = c(1, 2), labels = c("male", "female"))
-
+ccam$gender <- factor(case_when(
+  ccam$gender==1 ~ "male",
+  ccam$gender==2 ~ "female"))
 
 ccam$age_category <- factor(case_when(
   ccam$age_category==1 ~ "18-34",
@@ -270,6 +270,7 @@ ccam$income_category <- factor(case_when(
   ccam$income_category==2 ~ "50K-100K",
   ccam$income_category==3 ~ "Greater than 100K"),
   levels=c("Less than 50K","50K-100K","Greater than 100K"))
+summary(ccam$income_category)
 
 ccam$race <- factor(case_when(
   ccam$race==1 ~ "W",
@@ -294,8 +295,48 @@ ccam$age <- ccam$age_category
 ccam$edu <- ccam$educ_category
 ccam$income <- ccam$income_category 
 ccam$ideo <-ccam$party_x_ideo
+
 ```
 
+
+```{r}
+#| lable: demographic
+# Extracting relevant statistics from the summaries
+gender_values <- as.character(gender_summary[1:2])
+race_values <- as.character(race_summary[1:4])
+age_values <- as.character(age_summary[1:3])
+edu_values <- as.character(edu_summary[1:4])
+income_values <- as.character(income_summary[1:3])
+ideo_values <- as.character(ideo_summary[1:7])
+
+# Determine the length of the longest summary
+max_length <- max(length(gender_values), length(race_values), length(age_values),
+                  length(edu_values), length(income_values), length(ideo_values))
+
+# Extend the shorter summaries to match the length of the longest summary
+gender_values <- c(gender_values, rep(NA, max_length - length(gender_values)))
+race_values <- c(race_values, rep(NA, max_length - length(race_values)))
+age_values <- c(age_values, rep(NA, max_length - length(age_values)))
+edu_values <- c(edu_values, rep(NA, max_length - length(edu_values)))
+income_values <- c(income_values, rep(NA, max_length - length(income_values)))
+ideo_values <- c(ideo_values, rep(NA, max_length - length(ideo_values)))
+
+# Combine summary statistics into a single data frame
+demographics_summary <- data.frame(
+  Gender = gender_values,
+  Race = race_values,
+  Age = age_values,
+  Education = edu_values,
+  Income = income_values,
+  Ideology = ideo_values
+)
+
+# Print the combined summary table
+print("Summary statistics for Demographics:")
+print(demographics_summary)
+
+
+```
 
 ```{r}
 #| label: multicollinearity
